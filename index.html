@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson</title>
+  <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
+  <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+
+  <a-scene vr-mode-ui="enabled: false" embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+    <a-text id="class-info" value="Checking class schedule..." look-at="[gps-camera]" position="0 0 -3" scale="5 5 5" gps-entity-place="latitude: 48.516783; longitude: 32.265317;" anchor="center"></a-text>
+    <a-camera gps-camera rotation-reader></a-camera>
+  </a-scene>
+
+  <script>
+    // Розклад занять
+    const classTimes = [
+      { start: '08:30', end: '10:00' },
+      { start: '10:10', end: '11:40' },
+      { start: '12:10', end: '13:40' },
+      { start: '13:50', end: '15:20' }
+    ];
+
+    // Функція для перетворення рядка часу в об'єкт дати
+    function parseTime(time) {
+      const [hours, minutes] = time.split(':').map(num => parseInt(num, 10));
+      const date = new Date();
+      date.setHours(hours, minutes, 0, 0);
+      return date;
+    }
+
+    //Отримуємо поточний час
+    function getCurrentTime() {
+      return new Date();
+    }
+
+    //Перевіряємо, чи йде пара на даний момент
+    function isInSession(currentTime, startTime, endTime) {
+      return currentTime >= startTime && currentTime < endTime;
+    }
+
+    //Оновлюємо статус пари
+    function updateClassStatus() {
+      const currentTime = getCurrentTime();
+      const textElement = document.querySelector('#class-info');
+
+      for (const { start, end } of classTimes) {
+        const startTime = parseTime(start);
+        const endTime = parseTime(end);
+
+        if (isInSession(currentTime, startTime, endTime)) {
+          const timeLeft = (endTime - currentTime) / 60000;
+          textElement.setAttribute('value', `Classes time. End by: ${timeLeft.toFixed(0)} min.`);
+          textElement.setAttribute('scale', '3 3 3'); // Збільшуємо розмір тексту
+          textElement.setAttribute('position', '0 -1.5 -3'); // Переміщуємо текст вниз
+          return;
+        }
+      }
+
+      textElement.setAttribute('value', 'There are currently no classes.');
+      textElement.setAttribute('scale', '1 1 1'); // Зменшуємо розмір тексту
+      textElement.setAttribute('position', '0 -2 -3'); // Переміщуємо текст вниз
+    }
+
+    setInterval(updateClassStatus, 60000);//інтервал для оновлення
+    updateClassStatus();
+  </script>
+
+</body>
+</html>
